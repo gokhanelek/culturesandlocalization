@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using LocalisationDemo.Services;
 using Microsoft.AspNetCore.Mvc.Razor;
+using LocalisationDemo.Resources;
+using System.Reflection;
 
 namespace LocalisationDemo
 {
@@ -42,8 +44,16 @@ namespace LocalisationDemo
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
             });
-            services.AddLocalization(options => options.ResourcesPath = "Resources");
-            services.AddMvc().AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix);
+
+            services.AddMvc().AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix, opts => { opts.ResourcesPath = "Resources"; })
+                .AddDataAnnotationsLocalization(options =>
+                {
+                    options.DataAnnotationLocalizerProvider = (type, factory) =>
+                       {
+                           var assemblyName = new AssemblyName(typeof(CommonResources).GetTypeInfo().Assembly.FullName);
+                           return factory.Create(nameof(CommonResources), assemblyName.Name);
+                       };
+                });
             services.AddSingleton<CommonLocalizationService>();
 
         }
